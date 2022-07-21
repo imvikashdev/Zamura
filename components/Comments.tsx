@@ -19,7 +19,7 @@ interface IComment {
   comment: string;
   length?: number;
   _key: string;
-  postedBy: { _ref: string; _id: string };
+  postedBy: { _ref?: string; _id?: string };
 }
 
 const Comments = ({
@@ -29,51 +29,47 @@ const Comments = ({
   comments,
   isPostingComment,
 }: IProps) => {
-  const { userProfile, allUsers } = useAuthStore();
+  const { userProfile, allUsers }: any = useAuthStore();
 
   return (
     <div className="border-t-2 border-gray-200 pt-4 px-10 bg-[#f8f8f8] border-b-2 lg:pb-0 pb-[100px]">
       <div className="overflow-scroll lg:h-[475px]">
-        {comments?.length ? (
-          <div>
-            {comments.map((item, idx) => (
-              <>
-                {allUsers.map(
-                  (user: IUser) =>
-                    user._id === (item.postedBy._id || item.postedBy._ref) && (
-                      <div className=" p-2 items-center " key={idx}>
-                        <Link href={`/profile/${user._id}`}>
-                          <div className=" flex items-start gap-3">
-                            <div className=" w-8 h-8">
-                              <Image
-                                src={user.image}
-                                width={34}
-                                height={34}
-                                className="rounded-full"
-                                alt="user profile"
-                                layout="responsive"
-                              />
-                            </div>
-                            <div className=" hidden lg:block">
-                              <p className=" flex gap-1 items-center text-md font-bold text-primary lowercase">
-                                {user.userName.replaceAll(" ", "")}
-                                <GoVerified className=" text-blue-400 " />
-                              </p>
-                              <p className=" capitalize text-gray-400 text-xs">
-                                {user.userName}
-                              </p>
-                            </div>
+        {comments?.length > 0 ? (
+          comments.map((item: IComment, idx: number) => (
+            <div key={idx}>
+              {allUsers?.map(
+                (user: IUser) =>
+                  user._id === (item.postedBy._id || item.postedBy._ref) && (
+                    <div className=" p-2 items-center " key={idx}>
+                      <Link href={`/profile/${user._id}`}>
+                        <div className=" flex items-start gap-3">
+                          <div className=" w-12 h-12">
+                            <Image
+                              src={user.image}
+                              width={48}
+                              height={48}
+                              className="rounded-full cursor-pointer"
+                              alt="user profile"
+                              layout="responsive"
+                            />
                           </div>
-                        </Link>
-                        <div>
-                          <p>{item.comment}</p>
+
+                          <p className=" flex cursor-pointer gap-1 items-center text-[18px] font-bold leading-6 text-primary">
+                            {user.userName}{" "}
+                            <GoVerified className=" text-blue-400 " />
+                          </p>
                         </div>
+                      </Link>
+                      <div>
+                        <p className="-mt-5 ml-16 text-[16px] mr-8">
+                          {item.comment}
+                        </p>
                       </div>
-                    )
-                )}
-              </>
-            ))}
-          </div>
+                    </div>
+                  )
+              )}
+            </div>
+          ))
         ) : (
           <NoResults text="No comments yet!" />
         )}

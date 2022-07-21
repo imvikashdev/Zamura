@@ -1,35 +1,40 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { SanityAssetDocument } from "@sanity/client";
 import { useRouter } from "next/router";
 import { FaCloudUploadAlt } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import axios from "axios";
-import { SanityAssetDocument } from "@sanity/client";
 
 import useAuthStore from "../store/authStore";
-import { client } from "../utils/client";
-
-import { topics } from "../utils/constants";
 import { BASE_URL } from "../utils";
+import { client } from "../utils/client";
+import { topics } from "../utils/constants";
 
 const Upload = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [caption, setCaption] = useState("");
+  const [category, setCategory] = useState<String>(topics[0].name);
+  const [isLoading, setIsLoading] = useState<Boolean>(false);
+  const [savingPost, setSavingPost] = useState<Boolean>(false);
   const [videoAsset, setVideoAsset] = useState<
     SanityAssetDocument | undefined
   >();
-  const [wrongFileType, setWrongFileType] = useState(false);
-  const [caption, setCaption] = useState("");
-  const [category, setCategory] = useState(topics[0].name);
-  const [savingPost, setSavingPost] = useState(false);
+  const [wrongFileType, setWrongFileType] = useState<Boolean>(false);
 
-  const { userProfile }: { userProfile: any } = useAuthStore();
-
+  const userProfile: any = useAuthStore((state) => state.userProfile);
   const router = useRouter();
+
+  useEffect(() => {
+    if (!userProfile) router.push("/");
+  }, [userProfile, router]);
 
   const uploadVideo = async (e: any) => {
     const selectedFile = e.target.files[0];
     const fileTypes = ["video/mp4", "video/webm", "video/ogg"];
+
     if (fileTypes.includes(selectedFile.type)) {
+      setWrongFileType(false);
+      setIsLoading(true);
+
       client.assets
         .upload("file", selectedFile, {
           contentType: selectedFile.type,
@@ -72,28 +77,40 @@ const Upload = () => {
   };
 
   return (
-    <div className="flex w-full h-full absolute left-0 top-[60] mb-10 pt-10 lg:pt-20 bg-[#f8f8f8] justify-center">
+    <div className="flex w-full h-full absolute left-0 top-[60] lg:top-[70px] mb-10 pt-10 lg:pt-20 bg-[#f8f8f8] justify-center">
       <div className="bg-white rounded-lg xl:h-[80vh] flex gap-6 flex-wrap justify-between items-center p-14 pt-6 w-[60%]">
         <div>
           <div>
             <p className="text-2xl font-bold">Upload Video</p>
-            <p className="text-md text-gray-400">
+            <p className="text-md text-gray-400 mt-1">
               Post a video to your account
             </p>
           </div>
-          <div className="border-dashed rounded-xl border-4 border-gray-200 flex flex-col justify-center items-center outline-none mt-10 w-[260px] h-[460px] p-10 cursor-pointer hover:border-red-300 hover:bg-gray-100">
+          <div className="border-dashed rounded-xl border-4 border-gray-200 flex flex-col justify-center items-center outline-none mt-10 w-[260px] h-[458px] p-10 cursor-pointer hover:border-red-300 hover:bg-gray-100">
             {isLoading ? (
-              <p>Uploading...</p>
+              <p className="text-center text-3xl text-red-400 font-semibold">
+                Uploading...
+              </p>
             ) : (
               <div>
                 {videoAsset ? (
-                  <div>
+                  <div className=" rounded-3xl w-[300px]  p-4 flex flex-col gap-6 justify-center items-center">
                     <video
-                      src={videoAsset.url}
-                      loop
+                      className="rounded-xl h-[462px] mt-16 bg-black"
                       controls
-                      className="rounded-xl h-[450px] mt-16 bg-black"
-                    ></video>
+                      loop
+                      src={videoAsset?.url}
+                    />
+                    <div className=" flex justify-between gap-20">
+                      <p className="text-lg">{videoAsset.originalFilename}</p>
+                      <button
+                        type="button"
+                        className=" rounded-full bg-gray-200 text-red-400 p-2 text-xl cursor-pointer outline-none hover:shadow-md transition-all duration-500 ease-in-out"
+                        onClick={() => setVideoAsset(undefined)}
+                      >
+                        <MdDelete />
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <label className="cursor-pointer ">
@@ -110,7 +127,7 @@ const Upload = () => {
                         Up to 10 minutes <br />
                         Less than 2Gb
                       </p>
-                      <p className="bg-[#f51997] text-center mt-10 rounded text-white text-md font-medium p-2 w-52 outline-none">
+                      <p className="bg-[#fe7b08] text-center mt-10 rounded text-white text-md font-medium p-2 w-52 outline-none">
                         Select File
                       </p>
                     </div>
@@ -118,15 +135,15 @@ const Upload = () => {
                       type="file"
                       name="upload-video"
                       className="w-0 h-0"
-                      onChange={uploadVideo}
+                      onChange={(e) => uploadVideo(e)}
                     ></input>
                   </label>
                 )}
               </div>
             )}
             {wrongFileType && (
-              <p className="text-center text-xl text-red-400 font-semibold mt-4 w-[250px]">
-                Please select a video file
+              <p className="text-center text-xl text-red-400 font-semibold mt-4 w-[260px]">
+                Please select a video file (mp4 or webm or ogg)
               </p>
             )}
           </div>
@@ -137,12 +154,12 @@ const Upload = () => {
             type="text"
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
-            className="rounded outline-none text-md border-2 border-gray-200 p-2"
+            className="rounded lg:after:w-650 outline-none text-md border-2 border-gray-200 p-2"
           />
           <label className="text-md font-medium">Choose a Category</label>
           <select
             onChange={(e) => setCategory(e.target.value)}
-            className="outline-none border-2 border-gray-200 text-md capitalize lg:p-4 p-2 rounded cursor-pointer"
+            className="outline-none  border-2 border-gray-200 text-md capitalize lg:p-4 p-2 rounded cursor-pointer"
           >
             {topics.map((topic) => (
               <option
@@ -165,9 +182,9 @@ const Upload = () => {
             <button
               onClick={handlePost}
               type="button"
-              className="bg-[#f51997] text-white text-md font-medium p-2 rounded w-28 lg:w-44 outline-none"
+              className="bg-[#fe7b08] text-white text-md font-medium p-2 rounded w-28 lg:w-44 outline-none"
             >
-              Post
+              {savingPost ? "Posting..." : "Post"}
             </button>
           </div>
         </div>

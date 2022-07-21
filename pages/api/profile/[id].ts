@@ -21,10 +21,8 @@ export default async function handler(
     const userVideos = await client.fetch(userVideosQuery);
     const userLikedVideos = await client.fetch(userLikedVideosQuery);
 
-    res.status(200).json({
-      user: user[0],
-      userVideos,
-      userLikedVideos,
-    });
+    const data = { user: user[0], userVideos, userLikedVideos };
+
+    res.status(200).json(data);
   }
 }

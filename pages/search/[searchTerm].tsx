@@ -15,11 +15,11 @@ const Search = ({ videos }: { videos: Video[] }) => {
   const [isAccounts, setIsAccounts] = useState(false);
   const router = useRouter();
   const { searchTerm }: any = router.query;
-  const { allUsers } = useAuthStore();
+  const { allUsers }: { allUsers: IUser[] } = useAuthStore();
   const Accounts = isAccounts ? "border-b-2 border-black" : "text-gray-400";
   const Videos = !isAccounts ? "border-b-2 border-black" : "text-gray-400";
 
-  const searchedAccounts = allUsers.filter((user: IUser) =>
+  const searchedAccounts = allUsers?.filter((user: IUser) =>
     user.userName.toLowerCase().includes(searchTerm.toLowerCase())
   );
   return (
@@ -66,7 +66,7 @@ const Search = ({ videos }: { videos: Video[] }) => {
               </Link>
             ))
           ) : (
-            <NoResults text={`No video results for searchTerm ${searchTerm}`} />
+            <NoResults text={`No video results for ${searchTerm}`} />
           )}
         </div>
       ) : (
